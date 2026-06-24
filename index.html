@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LMON Premedia v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#050608;color:#fff;font-family:Montserrat,sans-serif;overflow-x:hidden}
+img{max-width:100%;display:block}
+
+.banner{position:relative}
+.banner img:first-child{width:100%}
+
+.logo{
+position:absolute;
+top:50%;
+right:4%;
+transform:translateY(-50%);
+width:420px;
+max-width:35vw;
+}
+
+.hero{
+max-width:1700px;
+margin:auto;
+display:flex;
+align-items:center;
+gap:30px;
+padding:10px 50px 50px;
+}
+
+.hero-left,.hero-right{flex:1}
+.hero-left img{max-width:760px}
+.hero-right h1{font-size:72px;font-weight:800}
+.hero-right h1 span{color:#B7D93A}
+.hero-right h2{font-size:58px;line-height:1.15;margin:15px 0}
+.hero-right p{font-size:24px;line-height:1.6;color:#d5d5d5}
+
+.buttons{display:flex;gap:20px;margin-top:30px;flex-wrap:wrap}
+
+.btn{
+padding:18px 35px;
+border-radius:12px;
+text-decoration:none;
+font-weight:700;
+transition:.25s;
+}
+
+.youtube{background:#B7D93A;color:#000}
+.youtube:hover{transform:translateY(-3px)}
+
+.tools{
+border:2px solid #B7D93A;
+color:#fff;
+}
+
+.tools:hover{
+background:#B7D93A;
+color:#000;
+}
+
+.tools-section{padding:20px 40px 100px}
+
+.tools-title{
+text-align:center;
+font-size:54px;
+margin-bottom:35px;
+color:#B7D93A;
+font-weight:800;
+}
+
+.tools-grid{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:25px;
+}
+
+.card{
+background:#080A0E;
+border:1px solid rgba(183,217,58,.3);
+border-radius:18px;
+padding:20px;
+display:flex;
+align-items:center;
+gap:18px;
+transition:all .25s ease;
+cursor:pointer;
+}
+
+.card:hover{
+transform:translateY(-6px);
+border-color:#B7D93A;
+box-shadow:0 0 15px rgba(183,217,58,.15),0 0 30px rgba(183,217,58,.08);
+}
+
+.card img{width:70px;height:70px}
+.card h3{font-size:22px;margin-bottom:6px}
+.card p{font-size:16px;color:#ccc}
+
+footer{
+text-align:center;
+padding:35px;
+color:#999;
+border-top:1px solid rgba(255,255,255,.08);
+}
+
+@media(max-width:1100px){
+
+/* MOBILE FIX: KEEP LOGO ON BANNER */
+.logo{
+position:absolute;
+top:50%;
+right:10px;
+transform:translateY(-50%);
+width:140px;
+max-width:none;
+margin:0;
+}
+
+.hero{
+flex-direction:column;
+padding:0 20px 30px;
+gap:0;
+text-align:center;
+}
+
+.hero-left img{
+max-width:620px;
+width:115%;
+margin-top:-10px;
+}
+
+.hero-right h1{font-size:58px}
+.hero-right h2{font-size:36px}
+.hero-right p{font-size:18px}
+
+.btn{
+width:260px;
+text-align:center;
+}
+
+.buttons{justify-content:center}
+
+.tools-grid{grid-template-columns:1fr}
+.tools-title{font-size:42px}
+}
+</style>
+</head>
+<body>
+
+<section class="banner">
+<img src="eye-banner.webp" alt="Banner">
+<img src="Logo.svg" class="logo" alt="Logo">
+</section>
+
+<section class="hero">
+<div class="hero-left">
+<img src="otto-standing.webp" alt="Otto">
+</div>
+
+<div class="hero-right">
+<h1>Hi, I'm <span>Otto.</span></h1>
+<h2>Your guide to prepress,<br>colour and print production.</h2>
+<p>I help designers, printers and prepress professionals understand colour, trapping, screening and more through interactive tools and easy-to-follow tutorials.</p>
+
+<div class="buttons">
+
+<a href="https://www.youtube.com/@OttosPrepressDesk"
+target="_blank"
+class="btn youtube">
+WATCH ON YOUTUBE </a>
+
+<a href="tools.html"
+class="btn tools">
+EXPLORE TOOLS </a>
+
+</div>
+</div>
+</section>
+
+<section class="tools-section">
+<h2 class="tools-title">POPULAR TOOLS</h2>
+
+<div class="tools-grid">
+<div class="card"><img src="Moire.svg"><div><h3>Moire Simulator</h3><p>See moire effects in real time.</p></div></div>
+<div class="card"><img src="Colour.svg"><div><h3>Colour Combination Tool</h3><p>Explore powerful colour combinations.</p></div></div>
+<div class="card"><img src="trapping.svg"><div><h3>Trapping Simulator</h3><p>Understand trapping visually.</p></div></div>
+<div class="card"><img src="registration.svg"><div><h3>Registration Simulator</h3><p>See misregistration in action.</p></div></div>
+</div>
+</section>
+
+<footer>© 2026 LMON Premedia</footer>
+
+</body>
+</html>
