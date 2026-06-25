@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LMON Dot Gain Simulator</title>
+<link rel="icon" type="image/png" href="Favicon.png">
+<style>
+body{margin:0;font-family:Arial;background:#050608}
+.sticky{
+position:relative;
+background:#050608;
+border-bottom:2px solid #8fb31f;
+padding:20px 24px;
+box-shadow:0 4px 18px rgba(0,0,0,.35);
+color:#fff;
+}
+#gain{width:100%;display:block;margin-top:10px}
+.container{max-width:1200px;margin:auto;padding:16px}
+.compare{display:grid;grid-template-columns:1fr 1fr 0.9fr;gap:20px}
+.panel{background:#ffffff;border-radius:16px;margin-bottom:24px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.imagebox{height:320px;display:flex;align-items:center;justify-content:center}
+.imagebox img{max-height:330px;width:auto}
+.readout{font-size:26px;font-weight:bold;text-align:center}
+#dotCanvas{max-width:100%}
+@media(max-width:768px){
+.compare{display:block}
+.compare .panel{margin-bottom:24px}
+.imagebox{height:240px}
+.imagebox img{max-height:250px}
+.readout{font-size:18px}
+}
+
+.readout-panel{order:1;}
+.slider-panel{order:2;margin-top:20px;}
+
+
+.simulator-wrap{display:flex;flex-direction:column}
+.image-panels{order:1}
+.readout-panel{order:2;margin-top:24px}
+.slider-panel{order:3;margin-top:18px}
+
+</style>
+</head>
+<body>
+
+<div class="sticky">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:28px"><div><img src="Logo.svg" style="height:80px"><h1 style="margin:10px 0 0;color:#b7db2d;font-size:64px;line-height:0.95;font-weight:900;letter-spacing:1px">DOT GAIN<br>SIMULATOR</h1><div style="color:#ddd">Understand how dot gain affects tonal values and print quality.</div></div><div style="flex:1;border:2px solid #8faa18;border-radius:16px;margin-bottom:24px;padding:20px;background:#0b0d10;color:#fff;display:grid;grid-template-columns:1fr 1fr;gap:28px"><div><h2 style="color:#b7db2d">WHAT YOU'LL LEARN</h2><ul><li>Understand dot gain.</li><li>See tonal values increase.</li><li>Ink spread on paper.</li><li>Impact on sharpness.</li></ul></div><div><h2 style="color:#b7db2d">HOW IT WORKS</h2><ul><li>Move the slider.</li><li>Compare images.</li><li>Observe darker dots.</li><li>Learn compensation.</li></ul></div></div></div><div style='margin-top:6px;color:#cfcfcf'>Understand how dot gain affects printed images.</div>
+
+</div>
+
+
+<div class="container">
+
+<div class="compare">
+
+<div class="panel">
+<h2>Original Otto</h2>
+<div class="imagebox">
+<img src="WingOpened-Otto.webp">
+</div>
+</div>
+
+<div class="panel">
+<h2>Printed Result</h2>
+<div class="imagebox">
+<img id="result" src="WingOpened-Otto.webp">
+</div>
+</div>
+
+<div class="panel">
+<h2 style="text-align:center">Tone Curve</h2>
+<canvas id="curveCanvas" width="260" height="260" style="width:100%;max-width:260px;display:block;margin:0 auto"></canvas>
+<div style="text-align:center;font-size:13px;margin-top:8px;color:#444">
+<div><span style="display:inline-block;width:30px;border-top:3px dashed #1849b8;vertical-align:middle"></span> Ideal (No Dot Gain)</div>
+<div style="margin-top:6px"><span style="display:inline-block;width:30px;border-top:3px solid #8faa18;vertical-align:middle"></span> With Dot Gain</div>
+</div>
+</div>
+
+</div>
+
+<div style="display:grid;grid-template-columns:280px 1fr;gap:16px;margin-bottom:20px">
+<div class="panel" style="background:#091223;color:#b7db2d;text-align:center;font-size:28px;font-weight:bold">
+DOT GAIN: <span id="gainValueBig">0%</span>
+</div>
+<div class="panel">
+<div id="readout" class="readout">Original: 20% | Dot Gain: 0% | Printed Value: 20%</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:2.3fr 1fr;gap:20px;align-items:stretch;margin-bottom:24px">
+
+<div class="panel" style="margin-bottom:0">
+<div style="text-align:center;font-weight:bold;font-size:28px;margin-bottom:16px">ADJUST DOT GAIN</div>
+<div style="font-size:20px;margin-bottom:12px">Dot Gain: <span id="gainValue">0</span>%</div>
+<input id="gain" type="range" min="0" max="40" value="0" style="width:100%">
+</div>
+
+<div class="panel" style="margin-bottom:0">
+<h2 style="text-align:center;margin-top:0">HALFTONE DOTS</h2>
+<div style="font-size:13px;color:#666;text-align:center;margin-bottom:10px">Dot structure updates with the slider</div>
+<center><canvas id="dotCanvas" width="260" height="220"></canvas></center>
+</div>
+
+</div>
+
+<script>
+
+
+function drawCurve(v){
+ const c=document.getElementById('curveCanvas');
+ if(!c) return;
+ const ctx=c.getContext('2d');
+ const w=c.width,h=c.height;
+ const L=40,R=15,T=15,B=35;
+ ctx.clearRect(0,0,w,h);
+
+ // grid
+ ctx.strokeStyle='#d8d8d8';
+ ctx.lineWidth=1;
+ ctx.setLineDash([3,3]);
+ [0,25,50,75,100].forEach(val=>{
+   let x=L+(w-L-R)*(val/100);
+   let y=h-B-(h-T-B)*(val/100);
+   ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,h-B); ctx.stroke();
+   ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(w-R,y); ctx.stroke();
+ });
+ ctx.setLineDash([]);
+
+ // axes
+ ctx.strokeStyle='#666';
+ ctx.beginPath();
+ ctx.moveTo(L,T); ctx.lineTo(L,h-B); ctx.lineTo(w-R,h-B);
+ ctx.stroke();
+
+ ctx.fillStyle='#222';
+ ctx.font='12px Arial';
+ [0,25,50,75,100].forEach(val=>{
+   let x=L+(w-L-R)*(val/100);
+   let y=h-B-(h-T-B)*(val/100);
+   ctx.fillText(val,x-6,h-B+18);
+   ctx.fillText(val,8,y+4);
+ });
+
+ ctx.font='bold 13px Arial';
+ ctx.fillText('Output (%)',2,12);
+ ctx.fillText('Input (%)',w/2-25,h-5);
+
+ // ideal dashed
+ ctx.strokeStyle='#1849b8';
+ ctx.setLineDash([6,4]);
+ ctx.beginPath();
+ ctx.moveTo(L,h-B);
+ ctx.lineTo(w-R,T);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
+ // gain curve
+ ctx.strokeStyle='#8faa18';
+ ctx.lineWidth=3;
+ ctx.beginPath();
+ for(let i=0;i<=100;i++){
+   let t=i/100;
+   let gain=v/40;
+   let yNorm=t+(gain*0.35*t*(1-t));
+   yNorm=Math.min(1,Math.max(0,yNorm));
+   let x=L+(w-L-R)*t;
+   let y=h-B-(h-T-B)*yNorm;
+   if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ // marker
+ let t=0.2+0.6*(v/40);
+ let gain=v/40;
+ let yNorm=t+(gain*0.35*t*(1-t));
+   yNorm=Math.min(1,Math.max(0,yNorm));
+ let mx=L+(w-L-R)*t;
+ let my=h-B-(h-T-B)*yNorm;
+ ctx.fillStyle='#8faa18';
+ ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2); ctx.fill();
+}
+
+
+function drawDots(v){
+ const c=document.getElementById('dotCanvas');
+ const ctx=c.getContext('2d');
+ ctx.clearRect(0,0,c.width,c.height);
+ for(let y=20;y<c.height;y+=30){
+   for(let x=20;x<c.width;x+=30){
+      ctx.beginPath();
+      ctx.arc(x,y,3+v*0.18,0,Math.PI*2);
+      ctx.fill();
+   }
+ }
+}
+
+gain.addEventListener('input',()=>{
+ let v=parseInt(gain.value);
+ gainValue.textContent=v;
+ gainValueBig.textContent=v+'%';
+ readout.textContent=`Original: 20% | Dot Gain: ${v}% | Printed Value: ${20+v}%`;
+
+ result.style.filter=`contrast(${100+v}%) brightness(${100-v*0.2}%)`;
+ drawDots(v);
+ drawCurve(v);
+});
+
+drawDots(0);
+drawCurve(0);
+</script>
+
+
+
+<div style="max-width:1200px;margin:30px auto;padding:0 16px">
+  <div style="display:grid;grid-template-columns:240px 1fr 1fr;gap:28px;background:#0b0d10;border:2px solid #8faa18;border-radius:22px;padding:28px;color:#fff">
+    <div style="display:flex;align-items:flex-end;justify-content:center;border-right:1px solid rgba(143,170,24,.35)">
+      <img src="WingOpened-Otto.webp" style="max-width:260px;width:100%">
+    </div>
+
+    <div style="padding:6px 18px;border-right:1px solid rgba(143,170,24,.35)">
+      <h2 style="margin:0 0 20px;color:#b7db2d;font-size:28px">🦉 OTTO TIP</h2>
+      <p style="font-size:20px;line-height:1.5"><strong>Dot gain is influenced by the printing process, substrate, ink, pressure and screen ruling.</strong></p>
+      <hr style="border:0;border-top:1px solid rgba(143,170,24,.35);margin:22px 0">
+      <p style="font-size:18px;line-height:1.6">Always calibrate your press and compensate for expected dot gain during prepress.</p>
+    </div>
+
+    <div style="padding:6px 18px">
+      <h2 style="margin:0 0 20px;color:#b7db2d;font-size:28px">💡 DID YOU KNOW?</h2>
+      <ul style="font-size:18px;line-height:1.7;padding-left:26px">
+        <li>Newspapers exhibit higher dot gain than coated stocks.</li>
+        <li>Flexographic printing generally has more dot gain than offset.</li>
+        <li>ICC profiles compensate for expected dot gain.</li>
+        <li>Excessive dot gain reduces shadow detail.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<footer>© 2026 LMON Premedia</footer>
+</body>

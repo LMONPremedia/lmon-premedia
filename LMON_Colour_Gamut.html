@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LMON Colour Gamut Visualiser</title>
+<link rel="icon" type="image/png" href="Favicon.png">
+<style>
+body{margin:0;background:#050608;color:#ddd;font-family:Arial,sans-serif}
+.wrap{max-width:1400px;margin:auto;padding:24px}
+.logo{height:90px}
+h1{color:#B7D93A;font-size:64px;margin:20px 0 10px}
+.sub{font-size:24px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:28px;margin-top:20px}
+.card{background:#fff;border-radius:24px;padding:20px}
+.gamut{height:700px;display:flex;align-items:center;justify-content:center;color:#666;font-size:34px;text-align:center}
+.side,.tip{background:#0b0d10;border:1px solid rgba(183,217,58,.35);border-radius:24px;padding:24px}
+.side h2,.tip h2{color:#B7D93A}
+.tip{margin-top:24px;position:relative;min-height:180px}
+.otto{position:absolute;right:20px;bottom:0;width:180px}
+ul li{margin-bottom:16px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.otto{position:static;display:block;margin:20px auto 0}h1{font-size:42px}}
+</style>
+
+<style id="fred-fix">
+.simcard canvas, canvas{
+max-width:560px !important;
+max-height:560px !important;
+display:block;
+margin:0 auto;
+}
+.legend{
+margin-top:20px !important;
+display:flex !important;
+flex-direction:column !important;
+}
+.controls{
+margin-top:18px !important;
+}
+.card,.simcard{
+min-height:700px !important;
+}
+</style>
+
+
+<style id="otto-rebuild">
+.canvasRow{
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+}
+#c{
+ display:block;
+ margin:0 auto;
+ max-width:520px;
+ width:100%;
+ height:auto;
+}
+.sim-info{
+ width:100%;
+ max-width:520px;
+ margin:10px auto 0 auto;
+}
+.legend{
+ display:flex!important;
+ flex-direction:column!important;
+ gap:10px;
+ margin-top:10px!important;
+}
+.controls{
+ display:flex;
+ gap:10px;
+ margin-top:18px!important;
+}
+.legendRow{display:flex;align-items:center;gap:10px}
+.sw{width:40px;height:20px;border-radius:4px}
+.label{font-size:14px;color:#333}
+button.small{padding:8px 12px}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+<img src="Logo.svg" class="logo">
+<h1>COLOUR GAMUT VISUALISER</h1>
+<div class="sub">Understand the difference between RGB, CMYK and Pantone colour gamuts.</div>
+
+<div class="grid">
+<div class="card">
+<div class="gamut">
+
+<div class="gamut" style="height:auto;display:block;color:#333;">
+<div class="canvasRow">
+      <canvas id="c" width="520" height="520"></canvas>
+
+      <div class="sim-info">
+        <div class="legend">
+          <div class="legendRow"><div class="sw" style="background:linear-gradient(90deg,#fff, #ddd);"></div><div class="label">Visible spectrum (hue wheel)</div></div>
+          <div class="legendRow"><div class="sw" style="background:linear-gradient(90deg, rgba(255,0,0,0.9), rgba(0,255,0,0.9)); border:2px solid rgba(255,0,0,0.2)"></div><div class="label">sRGB (approx)</div></div>
+          <div class="legendRow"><div class="sw" style="background:linear-gradient(90deg, rgba(0,255,255,0.9), rgba(255,0,255,0.9));"></div><div class="label">CMY (illustrative)</div></div>
+          <div class="legendRow"><div class="sw" style="background:linear-gradient(90deg,#ff7a00,#1ec5ff,#9b4cff);"></div><div class="label">Pantone (illustrative)</div></div>
+        </div>
+
+        <div class="controls">
+          <button id="playPause" class="small">Pause</button>
+          <button id="step" class="small">Step</button>
+          <button id="reset" class="small">Reset</button>
+        </div>
+    </div>
+  </div>
+
+
+</div>
+
+</div>
+</div>
+
+<div class="side">
+<h2>WHAT YOU'LL LEARN</h2>
+<ul>
+<li>Compare sRGB, CMYK and Pantone gamuts.</li>
+<li>See why some colours cannot be reproduced in CMYK.</li>
+<li>Understand device colour limitations.</li>
+</ul>
+
+<h2>HOW IT WORKS</h2>
+<ul>
+<li>The outer wheel represents visible colours.</li>
+<li>The polygons represent colour spaces.</li>
+<li>Use Pause, Step and Reset to compare gamuts.</li>
+</ul>
+</div>
+</div>
+
+<div class="tip">
+<h2>🦉 OTTO TIP</h2>
+<p>RGB devices can reproduce more colours than CMYK printing. Some Pantone colours require spot inks for accurate reproduction.</p>
+<img src="otto.png" class="otto">
+</div>
+</div>
+<script>
+// Keep original canvas code intact
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+let baseWidth = canvas.width;
+let baseHeight = canvas.height;
+
+function scaleCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  canvas.style.width = rect.width + "px";
+  canvas.style.height = rect.height + "px";
+}
+window.addEventListener('resize', scaleCanvas);
+scaleCanvas();
+
+// Original animation code
+let W = baseWidth, H = baseHeight;
+let cx = W/2, cy = H/2;
+let radius = Math.min(W,H) * 0.32;
+let t = 0;
+let playing = true;
+let highlightIndex = 0;
+const overlays = ['visible', 'srgb','cmy','pantone'];
+let lastStepTime = 0;
+const HIGHLIGHT_DURATION = 2400;
+
+function polarToXY(angleDeg, rFraction){
+  const a = angleDeg * Math.PI/180;
+  return { x: cx + Math.cos(a) * radius * rFraction, y: cy + Math.sin(a) * radius * rFraction };
+}
+
+const sRGB_points = [polarToXY(0,1), polarToXY(120,1), polarToXY(240,1)];
+const CMY_points = [polarToXY(180,1), polarToXY(300,1), polarToXY(60,1)];
+const pantone_points = [polarToXY(20,0.95), polarToXY(55,0.95), polarToXY(140,0.95), polarToXY(200,0.95), polarToXY(260,0.95), polarToXY(320,0.95)];
+
+function drawPolygon(points, options={}) {
+  const {fillStyle=null, strokeStyle='rgba(0,0,0,0.6)', lineWidth=2, dashed=false} = options;
+  ctx.beginPath();
+  points.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+  ctx.closePath();
+  if(fillStyle) ctx.fillStyle = fillStyle, ctx.fill();
+  if(dashed) ctx.setLineDash([6,6]); else ctx.setLineDash([]);
+  ctx.lineWidth=lineWidth; ctx.strokeStyle=strokeStyle; ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawPoints(points,color,size=8){
+  points.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,size,0,Math.PI*2);
+    ctx.fillStyle=color; ctx.fill();
+    ctx.strokeStyle='rgba(0,0,0,0.25)'; ctx.lineWidth=1; ctx.stroke();
+  });
+}
+
+function drawLabel(text, points){
+  let x=0,y=0; points.forEach(p=>{x+=p.x;y+=p.y;}); x/=points.length;y/=points.length;
+  ctx.font='600 14px Inter, system-ui, Arial'; ctx.fillStyle='rgba(0,0,0,0.85)';
+  ctx.fillText(text,x-(ctx.measureText(text).width/2),y);
+}
+
+function drawHueWheel(){
+  for(let a=0;a<360;a++){
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,radius,(a-0.5)*Math.PI/180,(a+0.5)*Math.PI/180); ctx.closePath();
+    ctx.fillStyle='hsl('+a+',100%,50%)'; ctx.fill();
+  }
+  const g=ctx.createRadialGradient(cx,cy,radius*0.03,cx,cy,radius);
+  g.addColorStop(0,'rgba(255,255,255,0.0)'); g.addColorStop(0.95,'rgba(0,0,0,0.0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,radius,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx,cy,radius+2,0,Math.PI*2); ctx.strokeStyle='rgba(0,0,0,0.04)'; ctx.lineWidth=2; ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.85)'; ctx.fill();
+}
+
+let lastTime = performance.now();
+function render(now){
+  const dt = now - lastTime; lastTime = now;
+  if(playing){ t+=dt; if(t-lastStepTime>HIGHLIGHT_DURATION){lastStepTime=t;highlightIndex=(highlightIndex+1)%overlays.length;} }
+
+  ctx.clearRect(0,0,W,H);
+
+  drawHueWheel();
+  ctx.beginPath(); ctx.arc(cx,cy,radius*1.01,0,Math.PI*2); ctx.strokeStyle='rgba(0,0,0,0.06)'; ctx.lineWidth=2; ctx.stroke();
+
+  const active = overlays[highlightIndex];
+  drawPolygon(sRGB_points,{fillStyle:'rgba(255,30,30,0.06)',strokeStyle:active==='srgb'?'rgba(255,80,80,0.98)':'rgba(255,80,80,0.28)',lineWidth:active==='srgb'?3:1.6});
+  drawPolygon(CMY_points,{fillStyle:'rgba(30,200,200,0.05)',strokeStyle:active==='cmy'?'rgba(30,200,200,0.98)':'rgba(30,200,200,0.28)',lineWidth:active==='cmy'?3:1.6});
+  drawPolygon(pantone_points,{fillStyle:'rgba(255,120,30,0.06)',strokeStyle:active==='pantone'?'rgba(255,160,30,0.98)':'rgba(255,160,30,0.28)',lineWidth:active==='pantone'?3:1.6,dashed:active!=='pantone'});
+
+  drawPoints(sRGB_points,'rgba(255,80,80,1)',9);
+  drawPoints(CMY_points,'rgba(80,255,255,1)',7);
+  drawPoints(pantone_points,'rgba(255,140,50,1)',6);
+
+  if(active==='srgb'){drawLabel('sRGB (approx)',sRGB_points);}
+  else if(active==='cmy'){drawLabel('CMY (illustrative)',CMY_points);}
+  else if(active==='pantone'){drawLabel('Pantone (illustrative)',pantone_points);}
+  else if(active==='visible'){ctx.save();ctx.shadowBlur=40;ctx.shadowColor='rgba(0,0,0,0.08)';ctx.beginPath();ctx.arc(cx,cy,radius*1.02,0,Math.PI*2);ctx.strokeStyle='rgba(0,0,0,0.08)';ctx.lineWidth=4;ctx.stroke();ctx.restore();ctx.font='600 18px Inter, Arial';ctx.fillStyle='rgba(0,0,0,0.85)';ctx.fillText('Visible Hue Wheel (approx)', cx - 140, cy - radius - 18);}
+
+  const spinAngle = (t*0.03)%360;
+  const sp = polarToXY(spinAngle,1.12);
+  ctx.beginPath(); ctx.arc(sp.x,sp.y,6+(Math.sin(t*0.008)*2),0,Math.PI*2); ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fill();
+
+  requestAnimationFrame(render);
+}
+
+document.getElementById('playPause').addEventListener('click', e=>{playing=!playing;e.target.textContent=playing?'Pause':'Play';});
+document.getElementById('step').addEventListener('click', ()=>{highlightIndex=(highlightIndex+1)%overlays.length;playing=false;document.getElementById('playPause').textContent='Play';});
+document.getElementById('reset').addEventListener('click', ()=>{highlightIndex=0;t=0;playing=true;document.getElementById('playPause').textContent='Pause';});
+
+requestAnimationFrame(render);
+</script>
+
+<footer>© 2026 LMON Premedia</footer>
+</body>
+</html>
