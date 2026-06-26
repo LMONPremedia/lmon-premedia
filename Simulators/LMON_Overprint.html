@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Attributes</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+.simulator-stage{display:block;background:#fff;padding:24px}
+.controls{text-align:center;margin-bottom:20px}
+.controls button{padding:12px 22px;font-size:16px;border:none;border-radius:8px;background:#1677ff;color:#fff;cursor:pointer}
+.panels{display:flex;gap:20px;flex-wrap:wrap}
+.panel{flex:1;min-width:420px;background:#fff;border-radius:12px;padding:15px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.stage{height:420px;border:1px solid #ccc;border-radius:10px;background:#fff;overflow:hidden}
+svg{width:100%;height:100%}
+@media(max-width:900px){.panel{min-width:100%}}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">OVERPRINT vs KNOCKOUT SIMULATOR</h1>
+<p class="page-subtitle">Compare knockout and overprint behaviour and understand how overlapping inks affect the final print.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Understand knockout and overprint.</li><li>Compare printed results side by side.</li><li>Visualise ink interaction.</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Press Toggle Plates View.</li><li>Compare Knockout and Overprint.</li><li>Observe the colour differences.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div class="controls">
+<button id="toggleBtn">Toggle Plates View</button>
+</div><div class="panels">
+<div class="panel">
+<h2>Knockout</h2>
+<div class="stage">
+<svg id="svgKnockout" viewbox="0 0 600 400"></svg>
+</div>
+</div>
+<div class="panel">
+<h2>Overprint</h2>
+<div class="stage">
+<svg id="svgOverprint" viewbox="0 0 600 400"></svg>
+</div>
+</div>
+</div><script>
+const knockout=document.getElementById("svgKnockout");
+const overprint=document.getElementById("svgOverprint");
+let showPlates=false;
+
+function draw(){
+
+if(!showPlates){
+
+knockout.innerHTML=`
+<rect width="600" height="400" fill="cyan"/>
+<text x="300" y="240" text-anchor="middle" font-size="140" font-weight="bold" fill="yellow">OTTO</text>
+`;
+
+overprint.innerHTML=`
+<rect width="600" height="400" fill="cyan"/>
+<text x="300" y="240" text-anchor="middle" font-size="140" font-weight="bold" fill="green">OTTO</text>
+`;
+
+}else{
+
+knockout.innerHTML=`
+<rect width="600" height="400" fill="white"/>
+<text x="300" y="180" text-anchor="middle" font-size="100" font-weight="bold" fill="cyan">C</text>
+<text x="300" y="300" text-anchor="middle" font-size="100" font-weight="bold" fill="gold">Y</text>
+`;
+
+overprint.innerHTML=`
+<rect width="600" height="400" fill="white"/>
+<text x="220" y="220" text-anchor="middle" font-size="100" font-weight="bold" fill="cyan">C</text>
+<text x="380" y="220" text-anchor="middle" font-size="100" font-weight="bold" fill="gold">Y</text>
+<text x="300" y="340" text-anchor="middle" font-size="40" font-weight="bold" fill="green">C + Y = Green</text>
+`;
+}
+}
+
+document.getElementById("toggleBtn").addEventListener("click",()=>{
+showPlates=!showPlates;
+draw();
+});
+
+draw();
+</script></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Otto-laptop.webp"/>
+</div>
+<div><h2>🦉 OTTO TIP</h2><p>Overprint allows inks to print on top of one another, while knockout removes the underlying colour before printing. Choosing the correct setting avoids unexpected colour changes.</p></div>
+<div><h2>💡 DID YOU KNOW?</h2><ul><li>Black text commonly overprints in commercial printing.</li><li>Overprinting Cyan and Yellow produces Green.</li><li>Incorrect overprint settings can disappear in print.</li><li>Always preview overprints before exporting a PDF.</li></ul></div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>

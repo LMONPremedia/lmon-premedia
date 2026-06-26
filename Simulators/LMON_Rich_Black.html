@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Framework</title>
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+.simulator-stage{display:block;background:#fff;padding:24px}
+.controls{text-align:center;margin-bottom:20px}
+.controls button{padding:12px 22px;font-size:16px;border:none;border-radius:8px;background:#1677ff;color:#fff;cursor:pointer}
+.panels{display:flex;gap:20px;flex-wrap:wrap}
+.panel{flex:1;min-width:420px;background:#fff;border-radius:12px;padding:15px;box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.stage{position:relative;height:420px;border:1px solid #ccc;border-radius:10px;background:#fff;overflow:hidden}
+svg{width:100%;height:100%}
+.info,.recommend{text-align:center;margin-top:12px}
+.recommend{background:#f7f7f7;padding:10px;border-radius:8px}
+@media(max-width:900px){.panel{min-width:100%}}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">RICH BLACK SIMULATOR</h1>
+<p class="page-subtitle">Compare 100K Black and Rich Black to understand when each should be used.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Understand 100K Black vs Rich Black.</li><li>Compare CMYK separations.</li><li>Choose the correct black for production.</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Click Toggle Separation View.</li><li>Compare both panels.</li><li>Observe how CMYK plates build each black.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div class="controls">
+<button id="toggleBtn">
+Toggle Separation View
+</button>
+</div><div class="panels">
+<div class="panel">
+<h2>100K Black</h2>
+<div class="stage">
+<svg id="svg100k" viewbox="0 0 600 400"></svg>
+</div>
+<div class="info" id="info100k">
+C0 M0 Y0 K100
+</div>
+<div class="recommend">
+Recommended for:
+<br/>
+Small Text • Fine Lines • Barcodes
+</div>
+</div>
+<div class="panel">
+<h2>Rich Black</h2>
+<div class="stage">
+<svg id="svgRich" viewbox="0 0 600 400"></svg>
+</div>
+<div class="info" id="infoRich">
+C60 M40 Y40 K100
+</div>
+<div class="recommend">
+Recommended for:
+<br/>
+Backgrounds • Posters • Packaging
+</div>
+</div>
+</div><script>
+
+const svg100k =
+document.getElementById("svg100k");
+
+const svgRich =
+document.getElementById("svgRich");
+
+let showSeparations = false;
+
+function drawVisual(){
+
+svg100k.innerHTML = `
+
+<rect
+x="80"
+y="80"
+width="440"
+height="220"
+fill="#222"
+/>
+
+<text
+x="300"
+y="220"
+text-anchor="middle"
+font-size="90"
+font-weight="bold"
+fill="white">
+100K
+</text>
+
+`;
+
+svgRich.innerHTML = `
+
+<rect
+x="80"
+y="80"
+width="440"
+height="220"
+fill="#000"
+/>
+
+<text
+x="300"
+y="220"
+text-anchor="middle"
+font-size="90"
+font-weight="bold"
+fill="white">
+RICH
+</text>
+
+`;
+
+document.getElementById("info100k").innerHTML =
+"C0 M0 Y0 K100";
+
+document.getElementById("infoRich").innerHTML =
+"C60 M40 Y40 K100";
+
+}
+
+function drawSeparations(){
+
+svg100k.innerHTML = `
+
+<rect x="60" y="60" width="100" height="100" fill="#eee"/>
+<text x="110" y="120" text-anchor="middle" font-size="40">C</text>
+
+<rect x="190" y="60" width="100" height="100" fill="#eee"/>
+<text x="240" y="120" text-anchor="middle" font-size="40">M</text>
+
+<rect x="320" y="60" width="100" height="100" fill="#eee"/>
+<text x="370" y="120" text-anchor="middle" font-size="40">Y</text>
+
+<rect x="450" y="60" width="100" height="100" fill="#000"/>
+<text x="500" y="120" text-anchor="middle" font-size="40" fill="white">K</text>
+
+`;
+
+svgRich.innerHTML = `
+
+<rect x="60" y="60" width="100" height="100" fill="cyan"/>
+<text x="110" y="120" text-anchor="middle" font-size="40">60%</text>
+
+<rect x="190" y="60" width="100" height="100" fill="magenta"/>
+<text x="240" y="120" text-anchor="middle" font-size="40">40%</text>
+
+<rect x="320" y="60" width="100" height="100" fill="yellow"/>
+<text x="370" y="120" text-anchor="middle" font-size="40">40%</text>
+
+<rect x="450" y="60" width="100" height="100" fill="#000"/>
+<text x="500" y="120" text-anchor="middle" font-size="40" fill="white">100%</text>
+
+`;
+
+document.getElementById("info100k").innerHTML =
+"Only the Black plate prints.";
+
+document.getElementById("infoRich").innerHTML =
+"All CMYK plates contribute to the black.";
+
+}
+
+function render(){
+
+if(showSeparations){
+
+drawSeparations();
+
+}else{
+
+drawVisual();
+
+}
+
+}
+
+document
+.getElementById("toggleBtn")
+.addEventListener("click",()=>{
+
+showSeparations =
+!showSeparations;
+
+render();
+
+});
+
+render();
+
+</script></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Standing-Otto.webp"/>
+</div>
+<div><h2>🦉 OTTO TIP</h2><p>Use 100K Black for small text and fine details to avoid registration issues. Use Rich Black for large solid areas where a deeper, darker black is required.</p></div>
+<div><h2>💡 DID YOU KNOW?</h2><ul><li>100K Black prints using only the black plate.</li><li>Rich Black combines CMYK inks for greater density.</li><li>Rich Black should not be used for small text.</li><li>Different printers may recommend different Rich Black recipes.</li></ul></div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>

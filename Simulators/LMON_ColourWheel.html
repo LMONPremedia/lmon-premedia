@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Colour Wheel</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+.simulator-stage{display:block;background:#fff;padding:20px}
+.sim-wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.whitecard{background:#fff;border-radius:18px;padding:24px;color:#183252}
+#pickerContainer{width:400px;height:400px;max-width:100%;margin:auto}
+.swatches{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:24px 0}
+.sw{width:150px;height:110px;border-radius:16px;display:flex;align-items:flex-end;justify-content:center;padding:12px}
+.hex{background:rgba(255,255,255,.65);padding:6px 10px;border-radius:8px;font-weight:bold;color:#123}
+.preview{border-radius:18px;height:120px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:bold}
+@media(max-width:900px){.sim-wrap{grid-template-columns:1fr}}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">COLOUR WHEEL</h1>
+<p class="page-subtitle">Explore colour relationships and colour harmony interactively.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Primary, secondary and complementary colours.</li><li>Understand colour harmony.</li><li>Interactive colour selection.</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Choose a harmony mode.</li><li>Drag around the colour wheel.</li><li>Compare generated harmonies.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div class="sim-wrap">
+<div class="whitecard leftcard">
+<div id="pickerContainer"></div>
+<label for="mode">Colour Harmony</label><br/><br/>
+<select id="mode">
+<option value="complementary">Complementary</option>
+<option value="analogous">Analogous</option>
+<option value="triadic">Triadic</option>
+<option value="tetradic">Tetradic</option>
+<option value="monochrome">Monochrome</option>
+</select>
+</div>
+<div class="whitecard rightcard">
+<h2>Selected Colour</h2>
+<div class="hex" id="selectedHex">#1ECBE1</div>
+<div class="swatches" id="swatchesContainer"></div>
+<div class="preview" id="preview">Preview</div>
+<p style="margin-top:20px">Move the handle on the wheel to change the base colour. Choose harmony from the dropdown to see related colours.</p>
+</div>
+</div><script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script><script>
+    const pickerContainer = document.getElementById('pickerContainer');
+    const picker = new iro.ColorPicker(pickerContainer, {
+      width: 400,
+      layout: [{ component: iro.ui.Wheel }],
+      color: "#1ecbe1"
+    });
+
+    // Resize picker when window size changes
+    window.addEventListener('resize', () => {
+      picker.resize(Math.min(400,pickerContainer.offsetWidth));
+    });
+
+    const modeSelect = document.getElementById('mode');
+    const swatchesContainer = document.getElementById('swatchesContainer');
+    const selectedHexEl = document.getElementById('selectedHex');
+    const preview = document.getElementById('preview');
+
+    function hslToHex(h,s,l){
+      s/=100; l/=100;
+      const k = n => (n+ h/30) % 12;
+      const a = s * Math.min(l,1-l);
+      const f = n => {
+        const color = l - a * Math.max(Math.min(k(n)-3, 9-k(n), 1), -1);
+        return Math.round(255*color).toString(16).padStart(2,'0');
+      }
+      return `#${f(0)}${f(8)}${f(4)}`;
+    }
+
+    function clampHue(h){ return ((h%360)+360)%360; }
+
+    function generateHarmony(baseColor, mode){
+      const h = baseColor.hsl.h;
+      const s = baseColor.hsl.s;
+      const l = baseColor.hsl.l;
+      const out = [];
+
+      if(mode==='complementary'){
+        out.push({h:h,s:s,l:l});
+        out.push({h:clampHue(h+180),s:s,l:l});
+      } else if(mode==='analogous'){
+        out.push({h:clampHue(h-30),s:s,l:l});
+        out.push({h:h,s:s,l:l});
+        out.push({h:clampHue(h+30),s:s,l:l});
+      } else if(mode==='triadic'){
+        out.push({h:clampHue(h-120),s:s,l:l});
+        out.push({h:h,s:s,l:l});
+        out.push({h:clampHue(h+120),s:s,l:l});
+      } else if(mode==='tetradic'){
+        out.push({h:h,s:s,l:l});
+        out.push({h:clampHue(h+90),s:s,l:l});
+        out.push({h:clampHue(h+180),s:s,l:l});
+        out.push({h:clampHue(h+270),s:s,l:l});
+      } else if(mode==='monochrome'){
+        out.push({h:h,s:Math.max(6,s-30),l:Math.max(10,l-25)});
+        out.push({h:h,s:s,l:l});
+        out.push({h:h,s:Math.min(100,s+10),l:Math.min(90,l+20)});
+      } else out.push({h:h,s:s,l:l});
+
+      return out.map(o => ({ hex:hslToHex(o.h,o.s,o.l), h:o.h,s:o.s,l:o.l }));
+    }
+
+    function updateUI(color){
+      const mode = modeSelect.value;
+      const harmony = generateHarmony(color, mode);
+      swatchesContainer.innerHTML = '';
+      harmony.forEach(c=>{
+        const sw = document.createElement('div');
+        sw.className = 'sw';
+        sw.style.background = c.hex;
+        const label = document.createElement('div');
+        label.className = 'hex';
+        label.textContent = c.hex.toUpperCase();
+        label.title = 'Click to copy ' + c.hex;
+        label.addEventListener('click', ()=>{
+          navigator.clipboard.writeText(c.hex).then(()=>{
+            const old = label.textContent;
+            label.textContent = 'Copied!';
+            setTimeout(()=> label.textContent = old,900);
+          });
+        });
+        sw.appendChild(label);
+        swatchesContainer.appendChild(sw);
+      });
+      selectedHexEl.textContent = color.hexString.toUpperCase();
+      preview.style.background = `linear-gradient(90deg, ${harmony[0].hex}, ${harmony[harmony.length-1].hex})`;
+      preview.textContent = (mode.charAt(0).toUpperCase() + mode.slice(1)) + ' preview';
+    }
+
+    // initial render
+    updateUI(picker.color);
+
+    picker.on('color:change', color => updateUI(color));
+    modeSelect.addEventListener('change', ()=> updateUI(picker.color));
+  </script><script>
+function simulate(){
+const moves=[[8,0],[-8,0],[0,8],[0,-8]];
+const m=moves[Math.floor(Math.random()*moves.length)];
+document.getElementById('trapBox').style.transform=`translate(${m[0]}px,${m[1]}px)`;
+document.getElementById('noTrapBox').style.transform=`translate(${m[0]}px,${m[1]}px)`;
+}
+function resetDemo(){
+document.getElementById('trapBox').style.transform='translate(0,0)';
+document.getElementById('noTrapBox').style.transform='translate(0,0)';
+}
+</script></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Otto-PointToViewer.webp"/>
+</div>
+<div><h2>🦉 OTTO TIP</h2><p>A good colour combination is only the first step.</p><p>Always verify your colours using the correct ICC profile, viewing conditions, and output process before approving artwork for production.</p></div>
+<div><h2>💡 DID YOU KNOW?</h2><ul><li>Complementary — Creates maximum contrast.</li><li>Analogous — Creates natural harmony.</li><li>Triadic — Offers balanced vibrancy.</li><li>Tetradic — Rich and complex, but harder to balance.</li><li>Monochromatic — Simple, elegant and always works.</li></ul></div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>

@@ -1,0 +1,103 @@
+/* =========================================================
+   LMON Dot Gain Simulator
+   Simulator-specific CSS only
+   ========================================================= */
+
+#gain{
+    width:100%;
+    display:block;
+    margin-top:10px;
+}
+
+.compare{
+    display:grid;
+    grid-template-columns:1fr 1fr 0.9fr;
+    gap:20px;
+}
+
+.panel{
+    background:#fff;
+    border-radius:16px;
+    margin-bottom:24px;
+    padding:20px;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+    color:#111;
+}
+
+.panel-title{
+    margin:0 0 16px;
+    font-size:36px;
+    font-weight:800;
+    color:#111;
+}
+
+.panel-title.center{
+    text-align:center;
+}
+
+.section-heading{
+    text-align:center;
+    font-size:28px;
+    font-weight:800;
+    margin-bottom:16px;
+    color:#111;
+}
+
+.imagebox{
+    height:320px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.imagebox img{
+    max-height:330px;
+    width:auto;
+}
+
+.readout{
+    font-size:26px;
+    font-weight:bold;
+    text-align:center;
+    color:#111;
+}
+
+#dotCanvas{
+    max-width:100%;
+}
+
+.readout-panel{order:1;}
+.slider-panel{order:2;margin-top:20px;}
+
+.simulator-wrap{
+    display:flex;
+    flex-direction:column;
+}
+
+.image-panels{order:1;}
+.readout-panel{order:2;margin-top:24px;}
+.slider-panel{order:3;margin-top:18px;}
+
+@media (max-width:768px){
+
+.compare{
+    display:block;
+}
+
+.compare .panel{
+    margin-bottom:24px;
+}
+
+.imagebox{
+    height:240px;
+}
+
+.imagebox img{
+    max-height:250px;
+}
+
+.readout{
+    font-size:18px;
+}
+
+}

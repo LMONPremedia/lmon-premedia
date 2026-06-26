@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Misregistration</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+.simulator-stage{display:block;background:#fff;padding:24px}
+.stage{background:#fff;border-radius:28px;min-height:520px;display:flex;align-items:center;justify-content:center}
+.print{position:relative;font-size:180px;font-weight:900;line-height:1}
+.plate{position:absolute;left:0;top:0}
+.c{color:cyan}.m{color:magenta}.y{color:gold}.k{color:black;position:relative}
+.buttons{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;margin-top:20px}
+.btn{background:#101418;border:1px solid #6f8a17;color:#B7D93A;border-radius:18px;padding:22px;text-align:center;font-size:28px;cursor:pointer}
+.btn span{display:block;font-size:18px;margin-top:10px}
+@media(max-width:900px){.print{font-size:110px}.buttons{grid-template-columns:repeat(2,1fr)}}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">MISREGISTRATION SIMULATOR</h1>
+<p class="page-subtitle">See how plate misregistration creates colour fringing and affects print quality.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Registration fundamentals</li><li>Colour fringing</li><li>Plate alignment</li><li>Print tolerances</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Each colour plate can shift independently.</li><li>Small movements create visible halos.</li><li>The simulation exaggerates defects for learning.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div class="stage">
+<div class="print">
+<div class="plate c" id="c">PRINT</div>
+<div class="plate m" id="m">PRINT</div>
+<div class="plate y" id="y">PRINT</div>
+<div class="plate k" id="k">PRINT</div>
+</div>
+</div><div class="buttons">
+<div class="btn" onclick="preset('light')">▁▂▃▅<span>LIGHT</span></div>
+<div class="btn" onclick="preset('medium')">▁▃▅▇<span>MEDIUM</span></div>
+<div class="btn" onclick="preset('heavy')">▂▄▆█<span>HEAVY</span></div>
+<div class="btn" onclick="preset('random')">⤮<span>RANDOM</span></div>
+<div class="btn" onclick="resetSimulation()">↺<span>RESET</span></div>
+</div><script>
+function apply(c,m,y,k){
+document.getElementById('c').style.transform=`translate(${c[0]}px,${c[1]}px)`;
+document.getElementById('m').style.transform=`translate(${m[0]}px,${m[1]}px)`;
+document.getElementById('y').style.transform=`translate(${y[0]}px,${y[1]}px)`;
+document.getElementById('k').style.transform=`translate(${k[0]}px,${k[1]}px)`;
+}
+function preset(t){
+if(t==='light') apply([2,-1],[-2,1],[1,2],[0,0]);
+if(t==='medium') apply([5,-2],[-5,3],[3,4],[0,0]);
+if(t==='heavy') apply([10,-4],[-10,6],[6,8],[0,0]);
+if(t==='random'){
+const r=()=>Math.floor(Math.random()*21)-10;
+apply([r(),r()],[r(),r()],[r(),r()],[0,0]);
+}
+}
+function resetSimulation(){ apply([0,0],[0,0],[0,0],[0,0]); }
+resetSimulation();
+</script></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Otto-Magnifier.webp"/>
+</div>
+<div><h2>🦉 OTTO TIP</h2><p>In commercial printing, tolerances are often between 0.05 mm and 0.25 mm depending on process and substrate.</p></div>
+<div><h2>💡 DID YOU KNOW?</h2><ul><li>A 0.1 mm registration error can be visible on small text.</li><li>Black is often used as the reference plate.</li><li>Paper stretch can affect registration.</li><li>Modern presses use automatic register control.</li></ul></div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>
