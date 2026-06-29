@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Subtractive Colour Mode</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+.simulator-stage{display:block;background:#050608;padding:20px}
+
+/* Stage: 100% of parent panel so it never overflows */
+#stage{
+  width:100%;
+  max-width:700px;
+  aspect-ratio:700/460;
+  position:relative;
+  overflow:hidden;
+  border-radius:18px;
+  background:#fff;
+  box-shadow:0 0 0 2px rgba(0,0,0,.45);
+  margin:0 auto;
+}
+
+/* Circles: vw keeps width=height at any screen size */
+.circle{
+  position:absolute;
+  width:clamp(60px,18vw,180px);
+  height:clamp(60px,18vw,180px);
+  border-radius:50%;
+  mix-blend-mode:multiply;
+  cursor:grab;
+  touch-action:none;
+  z-index:10;
+}
+#magenta{background:magenta}
+#cyan{background:cyan}
+#yellow{background:yellow}
+
+#otto{position:absolute;right:0;bottom:0;width:200px;pointer-events:none;z-index:999}
+
+#resetBtn{
+  display:block;
+  margin:20px auto 0;
+  background:#B7D93A;
+  color:#000;
+  padding:10px 22px;
+  border:none;
+  border-radius:8px;
+  font-size:18px;
+  cursor:pointer;
+}
+
+@media(max-width:600px){
+  #resetBtn{font-size:14px;padding:8px 18px}
+}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">SUBTRACTIVE COLOUR SIMULATOR</h1>
+<p class="page-subtitle">Explore how Cyan, Magenta and Yellow inks combine to create subtractive colours.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Understand subtractive colour.</li><li>See how CMY inks combine.</li><li>Learn why all three produce near black.</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Drag the CMY ink layers.</li><li>Overlap the colours.</li><li>Press Reset to restore.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div id="stage">
+<div class="circle" id="magenta"></div>
+<div class="circle" id="cyan"></div>
+<div class="circle" id="yellow"></div>
+</div><button id="resetBtn">Reset</button><script>
+const stage = document.getElementById('stage');
+const circles = [...document.querySelectorAll('.circle')];
+const resetBtn = document.getElementById('resetBtn');
+
+let dragging = null;
+let pointerId = null;
+let offset = { x: 0, y: 0 };
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+function resetCircles() {
+  const stageWidth = stage.clientWidth;
+  const stageHeight = stage.clientHeight;
+
+  const cSize = document.getElementById('magenta').offsetWidth;
+  const maxLeft = stageWidth - cSize;
+  const maxTop  = stageHeight - cSize;
+
+  document.getElementById('magenta').style.left = `${stageWidth * 0.20}px`;
+  document.getElementById('magenta').style.top  = `${stageHeight * 0.08}px`;
+
+  document.getElementById('cyan').style.left = `${Math.min(stageWidth * 0.55, maxLeft)}px`;
+  document.getElementById('cyan').style.top  = `${stageHeight * 0.08}px`;
+
+  document.getElementById('yellow').style.left = `${stageWidth * 0.375}px`;
+  document.getElementById('yellow').style.top  = `${Math.min(stageHeight * 0.52, maxTop)}px`;
+}
+
+function onPointerDown(e) {
+  if (e.button !== undefined && e.button !== 0) return;
+
+  dragging = e.currentTarget;
+  pointerId = e.pointerId;
+
+  dragging.setPointerCapture(pointerId);
+
+  const rect = dragging.getBoundingClientRect();
+
+  offset.x = e.clientX - rect.left;
+  offset.y = e.clientY - rect.top;
+
+  dragging.style.zIndex = 1000;
+}
+
+function onPointerMove(e) {
+  if (!dragging || e.pointerId !== pointerId) return;
+
+  const stageRect = stage.getBoundingClientRect();
+  const circleRect = dragging.getBoundingClientRect();
+
+  const x = clamp(
+    e.clientX - stageRect.left - offset.x,
+    0,
+    stageRect.width - circleRect.width
+  );
+
+  const y = clamp(
+    e.clientY - stageRect.top - offset.y,
+    0,
+    stageRect.height - circleRect.height
+  );
+
+  dragging.style.left = `${x}px`;
+  dragging.style.top = `${y}px`;
+}
+
+function stopDrag(e) {
+  if (!dragging || e.pointerId !== pointerId) return;
+
+  try {
+    dragging.releasePointerCapture(pointerId);
+  } catch {}
+
+  dragging.style.zIndex = '';
+  dragging = null;
+  pointerId = null;
+}
+
+circles.forEach(circle => {
+  circle.addEventListener('pointerdown', onPointerDown);
+});
+
+stage.addEventListener('pointermove', onPointerMove);
+stage.addEventListener('pointerup', stopDrag);
+stage.addEventListener('pointercancel', stopDrag);
+window.addEventListener('pointerup', stopDrag);
+
+resetBtn.addEventListener('click', resetCircles);
+
+window.addEventListener('load', resetCircles);
+window.addEventListener('resize', resetCircles);
+</script></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Otto-cmyk.webp"/>
+</div>
+<div><h2>🦉 OTTO TIP</h2><p>Drag the CMY ink layers together. Cyan + Yellow creates Green, Cyan + Magenta creates Blue, Magenta + Yellow creates Red. Combining all three ideally produces Black.</p></div>
+<div><h2>💡 DID YOU KNOW?</h2><ul><li>CMY mixing absorbs light instead of adding it.</li><li>Printing presses use CMYK rather than RGB.</li><li>Pure black is usually produced using a separate K plate.</li><li>Paper and ink affect the final printed colour.</li></ul></div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>
