@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Dot Gain</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+/* ── Dot Gain: fully fluid layout, no fixed widths or transform hacks ── */
+
+.simulator-stage{
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  padding:16px;
+  background:#050608;
+}
+
+/* dg-scale is now just a normal full-width wrapper */
+.dg-scale{
+  width:100%;
+}
+
+/* ── Row 1: 3 panels — Original | Printed | Tone Curve ── */
+.dg-compare{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:16px;
+  width:100%;
+}
+
+/* ── Row 2: Dot Gain readout | Value readout ── */
+.dg-row2{
+  display:grid;
+  grid-template-columns:1fr 2fr;
+  gap:16px;
+  width:100%;
+}
+
+/* ── Row 3: Slider | Halftone dots ── */
+.dg-row3{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:16px;
+  width:100%;
+}
+
+.dg-panel{
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.dg-imagebox{
+  height:180px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+}
+.dg-imagebox img{
+  max-height:100%;
+  width:auto;
+  max-width:100%;
+  object-fit:contain;
+}
+
+.dg-dotgain-panel{
+  background:#091223;
+  color:#b7db2d;
+  font-size:clamp(16px,2.5vw,24px);
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  min-height:60px;
+}
+
+.dg-readout{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:clamp(11px,1.5vw,18px);
+  font-weight:bold;
+  padding:8px;
+}
+
+.dg-tone-title,.dg-halftone-title,.dg-slider-title{
+  text-align:center;
+  font-size:clamp(13px,1.5vw,18px);
+  margin-bottom:8px;
+}
+
+.dg-tone-legend,.dg-halftone-note{
+  text-align:center;
+  font-size:clamp(10px,1.2vw,13px);
+  margin-top:6px;
+}
+
+.dg-slider-value{
+  font-size:clamp(12px,1.4vw,16px);
+  margin:6px 0 8px;
+  text-align:center;
+}
+
+.dg-halftone-center{display:flex;justify-content:center}
+
+/* Canvases: fluid */
+#curveCanvas{
+  display:block;
+  margin:auto;
+  width:100%;
+  height:auto;
+  max-width:240px;
+}
+#dotCanvas{
+  display:block;
+  width:100%;
+  height:auto;
+  max-width:200px;
+}
+
+#gain{width:100%}
+
+/* ── Tablet (≤ 900px) ── */
+@media(max-width:900px){
+  /* Two image panels side by side, tone curve full width below */
+  .dg-compare{
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto;
+  }
+  /* Tone curve panel spans both columns */
+  .dg-compare .dg-panel:nth-child(3){
+    grid-column:1 / -1;
+  }
+  .dg-row2{grid-template-columns:1fr 1fr}
+  .dg-row3{grid-template-columns:1fr 1fr}
+  .dg-imagebox{height:140px}
+}
+
+/* ── Phone (≤ 600px) ── */
+@media(max-width:600px){
+  .simulator-stage{padding:10px;gap:10px}
+
+  /* Two image panels side by side, tone curve full width below */
+  .dg-compare{
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:auto auto;
+    gap:8px;
+  }
+  .dg-compare .dg-panel:nth-child(3){
+    grid-column:1 / -1;
+  }
+
+  .dg-row2{grid-template-columns:1fr}
+  .dg-row3{grid-template-columns:1fr}
+  .dg-panel{padding:10px;border-radius:12px}
+  .dg-imagebox{height:100px}
+
+  /* Compact tone curve on phone */
+  #curveCanvas{max-width:100%}
+}
+</style></head>
+<body>
+<header class="site-header">
+<div class="container">
+<img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+<h1 class="page-title">DOT GAIN SIMULATOR</h1>
+<p class="page-subtitle">Understand how dot gain affects tonal values and print quality.</p>
+<section class="hero-panel">
+<div>
+<h2>WHAT YOU'LL LEARN</h2>
+<ul><li>Understand dot gain.</li><li>See tonal values increase.</li><li>Ink spread on paper.</li><li>Impact on sharpness.</li></ul>
+</div>
+<div>
+<h2>HOW IT WORKS</h2>
+<ul><li>Move the slider.</li><li>Compare images.</li><li>Observe darker dots.</li><li>Learn compensation.</li></ul>
+</div>
+</section>
+</div>
+</header>
+<main class="container">
+<section class="simulator-panel">
+<h2>Simulator Area</h2>
+<div class="simulator-stage"><div class="dg-scale"><div class="dg-compare">
+<div class="dg-panel">
+<h2>Original Otto</h2>
+<div class="dg-imagebox">
+<img src="../Images/Otto/WingOpened-Otto.webp"/>
+</div>
+</div>
+<div class="dg-panel">
+<h2>Printed Result</h2>
+<div class="dg-imagebox">
+<img id="result" src="../Images/Otto/WingOpened-Otto.webp"/>
+</div>
+</div>
+<div class="dg-panel">
+<h2 class="dg-tone-title">Tone Curve</h2>
+<canvas height="260" id="curveCanvas" width="260"></canvas>
+<div class="dg-tone-legend">
+<div><span style="display:inline-block;width:30px;border-top:3px dashed #1849b8;vertical-align:middle"></span> Ideal (No Dot Gain)</div>
+<div style="margin-top:6px"><span style="display:inline-block;width:30px;border-top:3px solid #8faa18;vertical-align:middle"></span> With Dot Gain</div>
+</div>
+</div>
+</div><div class="dg-row2">
+<div class="dg-panel dg-dotgain-panel">
+DOT GAIN: <span id="gainValueBig">0%</span>
+</div>
+<div class="dg-panel">
+<div class="dg-readout" id="readout">Original: 20% | Dot Gain: 0% | Printed Value: 20%</div>
+</div>
+</div><div class="dg-row3">
+<div class="dg-panel dg-slider-panel">
+<div class="dg-slider-title">ADJUST DOT GAIN</div>
+<div class="dg-slider-value">Dot Gain: <span id="gainValue">0</span>%</div>
+<input id="gain" max="40" min="0" type="range" value="0"/>
+</div>
+<div class="dg-panel dg-halftone-panel">
+<h2 class="dg-halftone-title">HALFTONE DOTS</h2>
+<div class="dg-halftone-note">Dot structure updates with the slider</div>
+<div class="dg-halftone-center"><canvas height="220" id="dotCanvas" width="260"></canvas></div>
+</div>
+</div><script>
+
+
+function drawCurve(v){
+ const c=document.getElementById('curveCanvas');
+ if(!c) return;
+ const ctx=c.getContext('2d');
+ const w=c.width,h=c.height;
+ const L=40,R=15,T=15,B=35;
+ ctx.clearRect(0,0,w,h);
+
+ // grid
+ ctx.strokeStyle='#d8d8d8';
+ ctx.lineWidth=1;
+ ctx.setLineDash([3,3]);
+ [0,25,50,75,100].forEach(val=>{
+   let x=L+(w-L-R)*(val/100);
+   let y=h-B-(h-T-B)*(val/100);
+   ctx.beginPath(); ctx.moveTo(x,T); ctx.lineTo(x,h-B); ctx.stroke();
+   ctx.beginPath(); ctx.moveTo(L,y); ctx.lineTo(w-R,y); ctx.stroke();
+ });
+ ctx.setLineDash([]);
+
+ // axes
+ ctx.strokeStyle='#666';
+ ctx.beginPath();
+ ctx.moveTo(L,T); ctx.lineTo(L,h-B); ctx.lineTo(w-R,h-B);
+ ctx.stroke();
+
+ ctx.fillStyle='#222';
+ ctx.font='12px Arial';
+ [0,25,50,75,100].forEach(val=>{
+   let x=L+(w-L-R)*(val/100);
+   let y=h-B-(h-T-B)*(val/100);
+   ctx.fillText(val,x-6,h-B+18);
+   ctx.fillText(val,8,y+4);
+ });
+
+ ctx.font='bold 13px Arial';
+ ctx.fillText('Output (%)',2,12);
+ ctx.fillText('Input (%)',w/2-25,h-5);
+
+ // ideal dashed
+ ctx.strokeStyle='#1849b8';
+ ctx.setLineDash([6,4]);
+ ctx.beginPath();
+ ctx.moveTo(L,h-B);
+ ctx.lineTo(w-R,T);
+ ctx.stroke();
+ ctx.setLineDash([]);
+
+ // gain curve
+ ctx.strokeStyle='#8faa18';
+ ctx.lineWidth=3;
+ ctx.beginPath();
+ for(let i=0;i<=100;i++){
+   let t=i/100;
+   let gain=v/40;
+   let yNorm=t+(gain*0.35*t*(1-t));
+   yNorm=Math.min(1,Math.max(0,yNorm));
+   let x=L+(w-L-R)*t;
+   let y=h-B-(h-T-B)*yNorm;
+   if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+ }
+ ctx.stroke();
+
+ // marker
+ let t=0.2+0.6*(v/40);
+ let gain=v/40;
+ let yNorm=t+(gain*0.35*t*(1-t));
+   yNorm=Math.min(1,Math.max(0,yNorm));
+ let mx=L+(w-L-R)*t;
+ let my=h-B-(h-T-B)*yNorm;
+ ctx.fillStyle='#8faa18';
+ ctx.beginPath(); ctx.arc(mx,my,5,0,Math.PI*2); ctx.fill();
+}
+
+
+function drawDots(v){
+ const c=document.getElementById('dotCanvas');
+ const ctx=c.getContext('2d');
+ ctx.clearRect(0,0,c.width,c.height);
+ for(let y=20;y<c.height;y+=30){
+   for(let x=20;x<c.width;x+=30){
+      ctx.beginPath();
+      ctx.arc(x,y,3+v*0.18,0,Math.PI*2);
+      ctx.fill();
+   }
+ }
+}
+
+gain.addEventListener('input',()=>{
+ let v=parseInt(gain.value);
+ gainValue.textContent=v;
+ gainValueBig.textContent=v+'%';
+ readout.textContent=`Original: 20% | Dot Gain: ${v}% | Printed Value: ${20+v}%`;
+
+ result.style.filter=`contrast(${100+v}%) brightness(${100-v*0.2}%)`;
+ drawDots(v);
+ drawCurve(v);
+});
+
+drawDots(0);
+drawCurve(0);
+</script></div></div>
+</section>
+<section class="otto-tip">
+<div class="otto-image">
+<img alt="Otto" src="../Images/Otto/Thinking-Otto.webp"/>
+</div>
+<div>
+<h2>🦉 OTTO TIP</h2>
+<p>Dot gain is influenced by the printing process, substrate, ink, pressure and screen ruling.</p><p>Always calibrate your press and compensate for expected dot gain during prepress.</p>
+</div>
+<div>
+<h2>💡 DID YOU KNOW?</h2>
+<ul><li>Newspapers exhibit higher dot gain than coated stocks.</li><li>Flexographic printing generally has more dot gain than offset.</li><li>ICC profiles compensate for expected dot gain.</li><li>Excessive dot gain reduces shadow detail.</li></ul>
+</div>
+</section>
+</main>
+<footer>
+© 2026 LMON Premedia
+</footer>
+</body>
+</html>
