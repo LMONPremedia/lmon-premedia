@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LMON Min Dot Simulator</title>
+<link rel="icon" type="image/png" href="../Images/Logo/Favicon.png">
+<link href="../CSS/lmon-framework.css" rel="stylesheet"/>
+<style>
+
+/* ── Simulator stage override: dark bg, no min-height fight ── */
+.simulator-stage{
+  display:block;
+  background:#0a0c10;
+  padding:24px;
+  min-height:unset;
+  color:#fff;
+}
+
+/* ── Sim inner wrapper ── */
+.sim{
+  width:100%;
+}
+
+/* ── Intro text ── */
+.sim-title{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:2px;
+  color:#555;
+  margin-bottom:4px;
+}
+.sim-headline{
+  font-size:22px;
+  font-weight:900;
+  color:#fff;
+  margin-bottom:4px;
+}
+.sim-headline span{color:#B7D93A}
+.sim-sub{
+  font-size:13px;
+  color:#777;
+  margin-bottom:20px;
+  line-height:1.5;
+}
+
+/* ── Split canvas block ── */
+.split-wrap{
+  position:relative;
+  width:100%;
+  border-radius:12px;
+  overflow:hidden;
+  background:#fff;
+  aspect-ratio:5/2;
+  margin-bottom:12px;
+}
+.split-label{
+  position:absolute;
+  top:10px;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:4px;
+  z-index:10;
+  pointer-events:none;
+}
+.label-file{
+  left:10px;
+  background:rgba(0,0,0,.6);
+  color:#B7D93A;
+}
+.label-press{
+  right:10px;
+  background:rgba(0,0,0,.6);
+  color:#ff5c5c;
+}
+.split-divider{
+  position:absolute;
+  left:50%;top:0;bottom:0;
+  width:2px;
+  background:#B7D93A;
+  z-index:10;
+  pointer-events:none;
+  box-shadow:0 0 8px rgba(183,217,58,.6);
+}
+canvas#splitCanvas{
+  width:100%;height:100%;display:block;
+}
+
+/* ── Verdict ── */
+.verdict{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  background:#0f1218;
+  border:2px solid rgba(255,255,255,.08);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom:16px;
+  transition:border-color .3s;
+}
+.verdict.danger{border-color:rgba(255,92,92,.4)}
+.verdict.safe{border-color:rgba(183,217,58,.4)}
+.verdict-icon{font-size:24px;line-height:1;flex-shrink:0}
+.verdict-text{flex:1}
+.verdict-count{font-size:18px;font-weight:900;line-height:1}
+.verdict-count.danger{color:#ff5c5c}
+.verdict-count.safe{color:#B7D93A}
+.verdict-desc{font-size:12px;color:#888;margin-top:3px;line-height:1.4}
+
+/* ── Controls ── */
+.sim-controls{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
+.ctrl-panel{
+  background:#0f1218;
+  border:2px solid rgba(255,255,255,.07);
+  border-radius:10px;
+  padding:16px;
+}
+.ctrl-label{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:1.5px;
+  color:#555;
+  margin-bottom:10px;
+}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;gap:12px}
+.toggle{position:relative;width:52px;height:28px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{
+  position:absolute;inset:0;
+  background:#1e2230;
+  border-radius:28px;
+  cursor:pointer;
+  transition:.25s;
+  border:2px solid rgba(255,255,255,.1);
+}
+.toggle-track:before{
+  content:'';
+  position:absolute;
+  width:20px;height:20px;
+  left:2px;top:2px;
+  background:#555;
+  border-radius:50%;
+  transition:.25s;
+}
+.toggle input:checked + .toggle-track{background:#ff5c5c;border-color:#ff5c5c}
+.toggle input:checked + .toggle-track:before{transform:translateX(24px);background:#fff}
+.toggle-desc{font-size:12px;color:#bbb;line-height:1.4}
+.toggle-desc b{color:#ff5c5c}
+
+/* Min dot slider */
+.slider-value{
+  font-size:30px;font-weight:900;color:#B7D93A;
+  line-height:1;margin-bottom:10px;
+}
+.slider-value span{font-size:14px;color:#555;font-weight:400}
+
+input[type=range]{
+  -webkit-appearance:none;
+  width:100%;height:6px;
+  border-radius:3px;
+  background:linear-gradient(to right,#B7D93A 0%,#B7D93A var(--pct),#1e2230 var(--pct));
+  outline:none;cursor:pointer;
+  --pct:0%;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:22px;height:22px;border-radius:50%;
+  background:#B7D93A;
+  border:3px solid #0a0c10;
+  box-shadow:0 0 8px rgba(183,217,58,.5);
+}
+input[type=range]::-moz-range-thumb{
+  width:22px;height:22px;border-radius:50%;
+  background:#B7D93A;border:3px solid #0a0c10;
+}
+.slider-ticks{
+  display:flex;justify-content:space-between;
+  margin-top:6px;font-size:10px;color:#444;
+}
+
+/* ── Tablet ── */
+@media(max-width:900px){
+  .split-wrap{aspect-ratio:5/3}
+  .sim-controls{grid-template-columns:1fr 1fr}
+}
+
+/* ── Phone ── */
+@media(max-width:600px){
+  .simulator-stage{padding:14px}
+  .sim-headline{font-size:18px}
+  .sim-sub{font-size:12px;margin-bottom:14px}
+  .split-wrap{aspect-ratio:4/3}
+  .sim-controls{grid-template-columns:1fr;gap:10px}
+  .ctrl-panel{padding:12px}
+  .slider-value{font-size:24px}
+  .verdict{padding:10px 12px;gap:10px}
+  .verdict-count{font-size:15px}
+  .verdict-desc{font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+<div class="container">
+  <img alt="LMON Logo" class="logo" src="../Images/Logo/Logo.svg"/>
+  <h1 class="page-title">MIN DOT SIMULATOR</h1>
+  <p class="page-subtitle">See how minimum dot settings protect very light tones in printing.</p>
+  <section class="hero-panel">
+    <div>
+      <h2>WHAT YOU'LL LEARN</h2>
+      <ul>
+        <li>What minimum dot is and why it matters.</li>
+        <li>Why very small dots disappear on press.</li>
+        <li>How raising the minimum dot protects highlights.</li>
+        <li>The trade-off between dot protection and tone accuracy.</li>
+      </ul>
+    </div>
+    <div>
+      <h2>HOW IT WORKS</h2>
+      <ul>
+        <li>Toggle press simulation to see dots vanish in highlights.</li>
+        <li>Drag the minimum dot slider from 0% up to 5%.</li>
+        <li>Watch green dots appear — these are now protected.</li>
+        <li>Read the verdict to understand what changed.</li>
+      </ul>
+    </div>
+  </section>
+</div>
+</header>
+
+<main class="container">
+<section class="simulator-panel">
+  <h2>Simulator Area</h2>
+  <div class="simulator-stage">
+  <div class="sim">
+
+    <p class="sim-title">Interactive Tool</p>
+    <h2 class="sim-headline">Will this dot <span>survive the press?</span></h2>
+    <p class="sim-sub">Toggle press simulation then drag the slider — watch highlights vanish, then protect them.</p>
+
+    <!-- Split canvas -->
+    <div class="split-wrap">
+      <div class="split-label label-file">FILE</div>
+      <div class="split-label label-press">PRINTED RESULT</div>
+      <div class="split-divider"></div>
+      <canvas id="splitCanvas"></canvas>
+    </div>
+
+    <!-- Verdict -->
+    <div class="verdict" id="verdict">
+      <div class="verdict-icon" id="verdictIcon">💡</div>
+      <div class="verdict-text">
+        <div class="verdict-count" id="verdictCount">Press simulation is off</div>
+        <div class="verdict-desc" id="verdictDesc">Toggle press simulation to see which dots are at risk of vanishing on press.</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="sim-controls">
+
+      <div class="ctrl-panel">
+        <div class="ctrl-label">Press Simulation</div>
+        <div class="toggle-row">
+          <label class="toggle">
+            <input id="pressToggle" type="checkbox" onchange="render()"/>
+            <span class="toggle-track"></span>
+          </label>
+          <div class="toggle-desc">Simulate ink on press — <b>sub-minimum dots disappear</b></div>
+        </div>
+      </div>
+
+      <div class="ctrl-panel">
+        <div class="ctrl-label">Minimum Dot Setting</div>
+        <div class="slider-value" id="sliderVal">0<span>%</span></div>
+        <input type="range" id="minDotSlider" min="0" max="5" step="0.5" value="0" oninput="onSlider()"/>
+        <div class="slider-ticks">
+          <span>0%</span><span>1%</span><span>2%</span><span>3%</span><span>4%</span><span>5%</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  </div>
+</section>
+
+<section class="otto-tip">
+  <div class="otto-image">
+    <img alt="Otto" src="../Images/Otto/WingOpened-Otto.webp"/>
+  </div>
+  <div>
+    <h2>🦉 OTTO TIP</h2>
+    <p>Choosing the right minimum dot depends on your press, paper and printing conditions. Uncoated and newsprint stocks absorb more ink, so dots spread more — a higher minimum dot helps. On coated stocks with tighter dot gain, a lower setting like 1–2% is usually enough. Always verify with a press proof before committing to production.</p>
+  </div>
+  <div>
+    <h2>💡 DID YOU KNOW?</h2>
+    <ul>
+      <li>Typical minimum dot values range from 1% to 3% depending on the press.</li>
+      <li>Without a minimum dot, 0.5% tones can completely disappear on press.</li>
+      <li>Flexographic printing often needs higher minimum dot settings than offset.</li>
+      <li>ICC profiles and RIP software can apply minimum dot compensation automatically.</li>
+      <li>Setting minimum dot too high can cause highlights to look heavier than intended.</li>
+    </ul>
+  </div>
+</section>
+</main>
+
+<footer>© 2026 LMON Premedia</footer>
+
+<script>
+const canvas  = document.getElementById('splitCanvas');
+const ctx     = canvas.getContext('2d');
+const slider  = document.getElementById('minDotSlider');
+const toggle  = document.getElementById('pressToggle');
+
+let minDot  = 0;
+let pressOn = false;
+
+function render() {
+  pressOn = toggle.checked;
+  updateVerdict();
+  drawSplit();
+}
+
+function onSlider() {
+  minDot = parseFloat(slider.value);
+  slider.style.setProperty('--pct', (minDot / 5 * 100) + '%');
+  document.getElementById('sliderVal').innerHTML = minDot + '<span>%</span>';
+  render();
+}
+
+function drawSplit() {
+  const W    = canvas.width  = canvas.offsetWidth;
+  const H    = canvas.height = canvas.offsetHeight;
+  const half = Math.floor(W / 2);
+  ctx.clearRect(0, 0, W, H);
+  drawHalftoneRegion(0,    0, half,     H, 0,      false);
+  drawHalftoneRegion(half, 0, W - half, H, minDot, pressOn);
+}
+
+function drawHalftoneRegion(x, y, w, h, floor, killTiny) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x, y, w, h);
+
+  const pitch = 14;
+  const cols  = Math.ceil(w / pitch) + 1;
+  const rows  = Math.ceil(h / pitch) + 1;
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const px = x + c * pitch;
+      const py = y + r * pitch;
+      let tone = ((px - x) / w) * 0.12;
+      const floorFrac    = floor / 100;
+      const originalTone = tone;
+      tone = Math.max(tone, floorFrac);
+
+      if (killTiny && originalTone < floorFrac) {
+        const maxR  = pitch * 0.48;
+        const r_dot = Math.sqrt(tone) * maxR;
+        ctx.beginPath();
+        ctx.arc(px, py, r_dot, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(100,180,0,0.85)';
+        ctx.fill();
+        continue;
+      }
+
+      if (killTiny && tone < 0.005) continue;
+
+      const maxR  = pitch * 0.48;
+      const r_dot = Math.sqrt(tone) * maxR;
+      if (r_dot < 0.2) continue;
+
+      ctx.beginPath();
+      ctx.arc(px, py, r_dot, 0, Math.PI * 2);
+      ctx.fillStyle = '#111';
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function updateVerdict() {
+  const verdictEl = document.getElementById('verdict');
+  const countEl   = document.getElementById('verdictCount');
+  const descEl    = document.getElementById('verdictDesc');
+  const iconEl    = document.getElementById('verdictIcon');
+
+  if (!pressOn) {
+    verdictEl.className   = 'verdict';
+    iconEl.textContent    = '💡';
+    countEl.className     = 'verdict-count';
+    countEl.textContent   = 'Press simulation is off';
+    descEl.textContent    = 'Toggle press simulation to see which dots are at risk of vanishing on press.';
+    return;
+  }
+
+  if (minDot === 0) {
+    verdictEl.className   = 'verdict danger';
+    iconEl.textContent    = '⚠️';
+    countEl.className     = 'verdict-count danger';
+    countEl.textContent   = 'Dots at risk of loss';
+    descEl.textContent    = 'With no minimum dot set, the lightest highlights contain dots so small they disappear on press — leaving pure white patches where there should be tone.';
+  } else {
+    verdictEl.className   = 'verdict safe';
+    iconEl.textContent    = '✅';
+    countEl.className     = 'verdict-count safe';
+    countEl.textContent   = minDot + '% minimum dot active';
+    descEl.textContent    = `All tones below ${minDot}% have been raised to ${minDot}%. Green dots on the right show protected highlights that would have vanished without this setting.`;
+  }
+}
+
+window.addEventListener('load',   () => { onSlider(); });
+window.addEventListener('resize', () => { drawSplit(); });
+</script>
+</body>
+</html>
