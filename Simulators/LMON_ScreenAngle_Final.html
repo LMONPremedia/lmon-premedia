@@ -116,30 +116,30 @@ canvas.plate{display:block;width:100%;aspect-ratio:3/2}
 
 /* ══ RESPONSIVE ══ */
 
-/* Tablet: 2-col, natural DOM order */
-@media(max-width:900px){
-  .sa-wrap{grid-template-columns:1fr 1fr}
-  .sa-left{grid-column:1/-1}
-  .sa-left-inner{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .sa-right{grid-column:1/-1}
-}
-
-/* Phone: single column, natural DOM order = Controls → Plates → Combined */
-@media(max-width:600px){
+/* Everything below desktop: single column stack, DOM order = Controls → Plates → Combined */
+@media(max-width:1024px){
   .simulator-stage{padding:10px}
-  .sa-wrap{grid-template-columns:1fr;gap:10px}
-  .sa-left{grid-column:1}
-  .sa-left-inner{display:block}
-  .sa-right{grid-column:1}
-  .preset-grid{grid-template-columns:1fr 1fr}
+  .sa-wrap{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .sa-left,.sa-mid,.sa-right{width:100%}
+  .sa-left-inner{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .qual-row{grid-template-columns:1fr 1fr}
   .overlays{gap:8px}
   .rosette-row{gap:4px}
+}
+
+@media(max-width:600px){
+  .sa-left-inner{display:block}
   .rs span{font-size:8px}
   .ctrl-row{margin-bottom:8px}
   .angle-val{font-size:12px;width:26px}
   .sa-btn{padding:7px;font-size:10px}
   .pb{font-size:9px;padding:6px 4px}
+  .preset-grid{grid-template-columns:1fr 1fr}
+  .qual-row{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -367,13 +367,17 @@ function dots(ctx,W,H,deg,col,z){
   const pitch=Math.max(2,16/z),dotR=pitch*0.38*Math.sqrt(0.5);
   const rad=deg*Math.PI/180,cos=Math.cos(rad),sin=Math.sin(rad);
   const cx=W/2,cy=H/2,steps=Math.ceil(Math.sqrt(W*W+H*H)/pitch)+2;
-  ctx.fillStyle=col+'0.92)';
+  // Batch ALL dots into one Path2D — single fill call instead of one per dot
+  const path=new Path2D();
   for(let r=-steps;r<steps;r++)for(let c=-steps;c<steps;c++){
     const gx=c*pitch,gy=r*pitch;
     const px=cx+gx*cos-gy*sin,py=cy+gx*sin+gy*cos;
     if(px<-pitch||px>W+pitch||py<-pitch||py>H+pitch)continue;
-    ctx.beginPath();ctx.arc(px,py,dotR,0,Math.PI*2);ctx.fill();
+    path.moveTo(px+dotR,py);
+    path.arc(px,py,dotR,0,Math.PI*2);
   }
+  ctx.fillStyle=col+'0.92)';
+  ctx.fill(path);
 }
 
 function drawPlate(id,key,z,hl){
@@ -451,17 +455,31 @@ function renderAll(){
   updateUI();
 }
 
-function schedule(){
-  if(rafBusy)return;rafBusy=true;
-  requestAnimationFrame(()=>{rafBusy=false;renderAll();});
+// Fast render: only redraws the changed plate + combined — skips rosette steps
+function renderFast(key){
+  const ids=['pc','pm','py','pk'],keys=['c','m','y','k'];
+  drawPlate(ids[keys.indexOf(key)],key,zoom,ovHL?true:null);
+  drawCombined('combined',zoom);
+  drawCombined('zoomed',zoomR);
+  updateUI();
 }
 
+function schedule(fast){
+  if(rafBusy)return;rafBusy=true;
+  requestAnimationFrame(()=>{rafBusy=false; fast?renderFast(fast):renderAll();});
+}
+
+let dragTimer=null;
 function onAngle(key,el){
   A[key]=parseInt(el.value);
   el.style.setProperty('--p',(A[key]/90*100)+'%');
   document.getElementById('v'+key).textContent=A[key]+'°';
   document.getElementById('l'+key).textContent=A[key]+'°';
-  lastKey=key;clearPresets();schedule();
+  lastKey=key;clearPresets();
+  // Fast render while dragging; full render 300ms after drag stops
+  schedule(key);
+  clearTimeout(dragTimer);
+  dragTimer=setTimeout(()=>schedule(false),300);
 }
 
 function clearPresets(){for(let i=0;i<6;i++)document.getElementById('p'+i).classList.remove('on');}
